@@ -12,7 +12,8 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table"
-import { Calendar, Clock, User } from 'lucide-react'
+import { Calendar, Clock, User, Download } from 'lucide-react'
+import { saveAs } from 'file-saver'
 
 export default function MisReservasPage() {
   const [reservas, setReservas] = useState([])
@@ -77,6 +78,31 @@ export default function MisReservasPage() {
     }
   }
 
+  const exportarCSV = () => {
+    const csvContent = [
+      ['Clase', 'Fecha', 'Hora', 'Instructor', 'Estado'],
+      ...reservas.map(reserva => [
+        reserva.clase.nombre,
+        new Date(reserva.clase.horario).toLocaleDateString(),
+        new Date(reserva.clase.horario).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+        reserva.clase.instructor,
+        'Confirmada'
+      ])
+    ].map(e => e.join(",")).join("\n");
+
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement("a");
+    if (link.download !== undefined) {
+      const url = URL.createObjectURL(blob);
+      link.setAttribute("href", url);
+      link.setAttribute("download", "mis_reservas.csv");
+      link.style.visibility = 'hidden';
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    }
+  }
+
   if (isLoading) return (
     <div className="flex justify-center items-center min-h-screen">
       <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-primary"></div>
@@ -98,7 +124,15 @@ export default function MisReservasPage() {
 
   return (
     <div className="container mx-auto py-8 px-4">
-      <h1 className="text-4xl font-bold mb-2">Mis Reservas</h1>
+      <div className="flex justify-between items-center mb-8">
+        <h1 className="text-4xl font-bold">Mis Reservas</h1>
+        {reservas.length > 0 && (
+          <Button onClick={exportarCSV} className="flex items-center gap-2">
+            <Download className="h-4 w-4" />
+            Exportar CSV
+          </Button>
+        )}
+      </div>
       <p className="text-gray-600 mb-8">Gestiona tus reservas de clases</p>
 
       {mensaje.texto && (
@@ -182,3 +216,4 @@ export default function MisReservasPage() {
     </div>
   )
 }
+
